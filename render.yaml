@@ -1,0 +1,77 @@
+services:
+  - type: web
+    name: mentorhub-api
+    env: node
+    plan: starter
+    region: oregon
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mentorhub-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 30d
+      - key: FRONTEND_URL
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      # Upstash Redis (set manually in Render dashboard)
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+      # QStash (set manually)
+      - key: QSTASH_TOKEN
+        sync: false
+      - key: QSTASH_CURRENT_SIGNING_KEY
+        sync: false
+      - key: QSTASH_NEXT_SIGNING_KEY
+        sync: false
+      # AI Keys (set manually)
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      # Cloudinary (set manually)
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      # Email (set manually)
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: EMAIL_FROM
+        value: noreply@mentorhub.com
+      # Feature flags
+      - key: ENABLE_AI
+        value: 'true'
+      - key: ENABLE_PAYMENTS
+        value: 'false'
+
+databases:
+  - name: mentorhub-db
+    plan: starter
+    region: oregon
+    databaseName: mentorhub
+    user: mentorhub
