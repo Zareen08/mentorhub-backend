@@ -1,6 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -9,53 +9,50 @@ datasource db {
 }
 
 model User {
-  id            String        @id @default(cuid())
-  email         String        @unique
+  id            String         @id @default(cuid())
+  email         String         @unique
   password      String
   name          String
-  role          Role          @default(USER)
+  role          Role           @default(USER)
   avatar        String?
   bio           String?
   expertise     String[]
-  rating        Float         @default(0)
-  totalReviews  Int           @default(0)
-  isVerified    Boolean       @default(false)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  
-  // Relations
+  rating        Float          @default(0)
+  totalReviews  Int            @default(0)
+  isVerified    Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
   mentors       Mentor[]
   bookings      Booking[]
   reviews       Review[]
   notifications Notification[]
   payments      Payment[]
-  sentMessages  Message[]     @relation("SentMessages")
-  
+
   @@index([email])
   @@index([role])
 }
 
 model Mentor {
-  id            String        @id @default(cuid())
-  userId        String        @unique
+  id            String         @id @default(cuid())
+  userId        String         @unique
   title         String
   company       String?
   experience    Int
   hourlyRate    Float
   skills        String[]
   availability  Availability[]
-  isActive      Boolean       @default(true)
-  totalSessions Int           @default(0)
-  totalEarnings Float         @default(0)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  
-  // Relations
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isActive      Boolean        @default(true)
+  totalSessions Int            @default(0)
+  totalEarnings Float          @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   bookings      Booking[]
-  reviews       Review[]      // Fixed: Added reverse relation
-  payments      Payment[]     // Fixed: Added reverse relation
-  
+  reviews       Review[]
+  payments      Payment[]
+
   @@index([userId])
   @@index([isActive])
   @@index([hourlyRate])
@@ -66,7 +63,7 @@ model Booking {
   userId        String
   mentorId      String
   date          DateTime
-  duration      Int           // in minutes
+  duration      Int
   status        BookingStatus @default(PENDING)
   totalAmount   Float
   paymentStatus PaymentStatus @default(PENDING)
@@ -75,13 +72,12 @@ model Booking {
   cancelReason  String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
-  
-  // Relations
+
   user          User          @relation(fields: [userId], references: [id])
   mentor        Mentor        @relation(fields: [mentorId], references: [id])
   review        Review?
   payment       Payment?
-  
+
   @@index([userId])
   @@index([mentorId])
   @@index([status])
@@ -89,149 +85,97 @@ model Booking {
 }
 
 model Review {
-  id          String    @id @default(cuid())
-  bookingId   String    @unique
-  userId      String
-  mentorId    String
-  rating      Int       
-  comment     String
-  sentiment   Json?     // Added for AI sentiment analysis
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  // Relations
-  booking     Booking   @relation(fields: [bookingId], references: [id])
-  user        User      @relation(fields: [userId], references: [id])
-  mentor      Mentor    @relation(fields: [mentorId], references: [id])
-  
+  id        String   @id @default(cuid())
+  bookingId String   @unique
+  userId    String
+  mentorId  String
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  mentor    Mentor   @relation(fields: [mentorId], references: [id])
+
   @@index([mentorId])
-  @@index([userId])
   @@index([rating])
-  @@index([createdAt])
 }
 
 model Notification {
-  id          String          @id @default(cuid())
-  userId      String
-  type        NotificationType
-  title       String
-  message     String
-  data        Json?
-  isRead      Boolean         @default(false)
-  createdAt   DateTime        @default(now())
-  
-  // Relations
-  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([isRead])
   @@index([createdAt])
-  @@index([type])
 }
 
 model Payment {
-  id          String        @id @default(cuid())
-  bookingId   String        @unique
-  userId      String
-  mentorId    String
-  amount      Float
-  currency    String        @default("USD")
-  status      PaymentStatus @default(PENDING)
-  stripeId    String?
-  stripePaymentIntentId String?
-  refundId    String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  
-  // Relations
-  booking     Booking       @relation(fields: [bookingId], references: [id])
-  user        User          @relation(fields: [userId], references: [id])
-  mentor      Mentor        @relation(fields: [mentorId], references: [id])
-  
-  @@index([userId])
-  @@index([mentorId])
-  @@index([status])
-  @@index([createdAt])
+  id        String        @id @default(cuid())
+  bookingId String        @unique
+  userId    String
+  mentorId  String
+  amount    Float
+  currency  String        @default("USD")
+  status    PaymentStatus @default(PENDING)
+  stripeId  String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  booking   Booking       @relation(fields: [bookingId], references: [id])
+  user      User          @relation(fields: [userId], references: [id])
+  mentor    Mentor        @relation(fields: [mentorId], references: [id])
 }
 
 model Conversation {
-  id           String        @id @default(cuid())
-  participants String[]      // Array of user IDs
-  lastMessage  String?
-  lastMessageAt DateTime      @default(now())
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  
-  // Relations
-  messages     Message[]
-  
+  id            String    @id @default(cuid())
+  participants  String[]
+  lastMessage   String?
+  lastMessageAt DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  messages      Message[]
+
   @@index([participants])
-  @@index([lastMessageAt])
 }
 
 model Message {
-  id             String     @id @default(cuid())
+  id             String       @id @default(cuid())
   conversationId String
   senderId       String
   content        String
-  isRead         Boolean    @default(false)
-  readAt         DateTime?
-  createdAt      DateTime   @default(now())
-  
-  // Relations
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender         User         @relation("SentMessages", fields: [senderId], references: [id])
-  
+
   @@index([conversationId])
   @@index([senderId])
   @@index([createdAt])
-  @@index([isRead])
 }
 
 model AILog {
-  id          String    @id @default(cuid())
-  userId      String?
-  type        AIType
-  prompt      String    @db.Text
-  response    String    @db.Text
-  tokensUsed  Int?
-  cost        Float?
-  model       String?   @default("gpt-3.5-turbo")
-  duration    Int?      // in milliseconds
-  createdAt   DateTime  @default(now())
-  
+  id         String   @id @default(cuid())
+  userId     String?
+  type       AIType
+  prompt     String
+  response   String
+  tokensUsed Int?
+  cost       Float?
+  createdAt  DateTime @default(now())
+
   @@index([userId])
   @@index([type])
   @@index([createdAt])
-}
-
-model ActivityLog {
-  id          String    @id @default(cuid())
-  userId      String?
-  action      String
-  entityType  String
-  entityId    String?
-  details     Json?
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime  @default(now())
-  
-  @@index([userId])
-  @@index([action])
-  @@index([entityType])
-  @@index([createdAt])
-}
-
-model UserSession {
-  id           String    @id @default(cuid())
-  userId       String
-  token        String    @unique
-  refreshToken String    @unique
-  expiresAt    DateTime
-  createdAt    DateTime  @default(now())
-  
-  @@index([userId])
-  @@index([expiresAt])
 }
 
 enum Role {
@@ -253,19 +197,14 @@ enum PaymentStatus {
   COMPLETED
   FAILED
   REFUNDED
-  PARTIALLY_REFUNDED
 }
 
 enum NotificationType {
   BOOKING_CONFIRMED
   BOOKING_REMINDER
   BOOKING_CANCELLED
-  BOOKING_RESCHEDULED
   REVIEW_RECEIVED
   PAYMENT_RECEIVED
-  PAYMENT_FAILED
-  MENTOR_MATCH
-  SYSTEM_ALERT
   SYSTEM
 }
 
@@ -274,9 +213,6 @@ enum AIType {
   CHAT
   MATCHING
   INSIGHT
-  SENTIMENT_ANALYSIS
-  DESCRIPTION_GENERATION
-  VALUE_ESTIMATION
 }
 
 enum Availability {
