@@ -6,7 +6,7 @@ const db_1 = require("./config/db");
 const redis_1 = require("./config/redis");
 const gemini_1 = require("./config/gemini");
 const logger_1 = require("./utils/logger");
-const PORT = env_1.env.PORT;
+const PORT = env_1.env.PORT || 5000;
 const startServer = async () => {
     try {
         // Connect to database
@@ -18,7 +18,7 @@ const startServer = async () => {
         // Start server
         app_1.server.listen(PORT, () => {
             logger_1.logger.info(`🚀 Server is running on port ${PORT}`);
-            logger_1.logger.info(`📍 Environment: ${env_1.env.NODE_ENV}`);
+            logger_1.logger.info(`📍 Environment: ${env_1.env.NODE_ENV || 'development'}`);
             logger_1.logger.info(`🔗 API URL: http://localhost:${PORT}/api`);
             logger_1.logger.info(`❤️  Health check: http://localhost:${PORT}/health`);
             logger_1.logger.info(`🤖 AI Provider: Google Gemini (Free)`);
@@ -31,9 +31,9 @@ const startServer = async () => {
     }
 };
 // Graceful shutdown
-const gracefulShutdown = async () => {
+const gracefulShutdown = () => {
     logger_1.logger.info('Received shutdown signal, closing server...');
-    app_1.server.close(async () => {
+    app_1.server.close(() => {
         logger_1.logger.info('Server closed');
         process.exit(0);
     });

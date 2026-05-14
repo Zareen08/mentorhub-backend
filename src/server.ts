@@ -1,11 +1,11 @@
-import { app, server } from './app';
+import { server } from './app';
 import { env } from './config/env';
 import { connectDatabase } from './config/db';
 import { connectRedis } from './config/redis';
 import { initializeGemini } from './config/gemini';
 import { logger } from './utils/logger';
 
-const PORT = env.PORT;
+const PORT = env.PORT || 5000;
 
 const startServer = async () => {
   try {
@@ -21,7 +21,7 @@ const startServer = async () => {
     // Start server
     server.listen(PORT, () => {
       logger.info(`🚀 Server is running on port ${PORT}`);
-      logger.info(`📍 Environment: ${env.NODE_ENV}`);
+      logger.info(`📍 Environment: ${env.NODE_ENV || 'development'}`);
       logger.info(`🔗 API URL: http://localhost:${PORT}/api`);
       logger.info(`❤️  Health check: http://localhost:${PORT}/health`);
       logger.info(`🤖 AI Provider: Google Gemini (Free)`);
@@ -34,9 +34,9 @@ const startServer = async () => {
 };
 
 // Graceful shutdown
-const gracefulShutdown = async () => {
+const gracefulShutdown = () => {
   logger.info('Received shutdown signal, closing server...');
-  server.close(async () => {
+  server.close(() => {
     logger.info('Server closed');
     process.exit(0);
   });

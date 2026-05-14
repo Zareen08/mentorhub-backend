@@ -14,36 +14,33 @@ const upload_routes_1 = __importDefault(require("../modules/uploads/upload.route
 const notification_routes_1 = __importDefault(require("../modules/notifications/notification.routes"));
 const analytics_routes_1 = __importDefault(require("../modules/analytics/analytics.routes"));
 const router = (0, express_1.Router)();
-// Health check
-router.get('/health', (req, res) => {
-    res.json({
-        success: true,
-        message: 'API is running',
-        timestamp: new Date().toISOString(),
-        version: '1.0.0',
-        uptime: process.uptime(),
-        environment: process.env.NODE_ENV,
-    });
-});
-// API version info
+// Root API endpoint
 router.get('/', (req, res) => {
     res.json({
-        name: 'MentorHub API',
-        version: '1.0.0',
-        description: 'AI-powered mentorship platform API',
-        documentation: `${req.protocol}://${req.get('host')}/api-docs`,
+        success: true,
+        message: 'MentorHub API v1',
+        endpoints: {
+            auth: '/api/auth',
+            users: '/api/users',
+            mentors: '/api/mentors',
+            bookings: '/api/bookings',
+            reviews: '/api/reviews',
+            ai: '/api/ai',
+            uploads: '/api/uploads',
+            notifications: '/api/notifications',
+            analytics: '/api/analytics'
+        }
     });
 });
-// Public routes (no authentication required)
+// Mount all routes
 router.use('/auth', auth_routes_1.default);
-router.use('/mentors', mentor_routes_1.default);
-router.use('/analytics', analytics_routes_1.default);
-// Protected routes (authentication required)
 router.use('/users', user_routes_1.default);
+router.use('/mentors', mentor_routes_1.default);
 router.use('/bookings', booking_routes_1.default);
 router.use('/reviews', review_routes_1.default);
 router.use('/ai', ai_routes_1.default);
 router.use('/uploads', upload_routes_1.default);
 router.use('/notifications', notification_routes_1.default);
+router.use('/analytics', analytics_routes_1.default);
 exports.default = router;
 //# sourceMappingURL=index.js.map

@@ -33,7 +33,7 @@ app.use(helmet({
 }));
 app.use(compression());
 app.use(cors({
-  origin: env.ALLOWED_ORIGINS.split(','),
+  origin: env.ALLOWED_ORIGINS?.split(',') || '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -53,6 +53,18 @@ app.get('/health', (req, res) => {
     uptime: process.uptime(),
     environment: env.NODE_ENV,
     aiProvider: 'Google Gemini (Free)',
+  });
+});
+
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    message: 'MentorHub API is running',
+    version: '1.0.0',
+    endpoints: {
+      api: '/api',
+      health: '/health'
+    }
   });
 });
 

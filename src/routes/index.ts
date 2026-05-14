@@ -11,39 +11,34 @@ import analyticsRoutes from '../modules/analytics/analytics.routes';
 
 const router = Router();
 
-// Health check
-router.get('/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'API is running',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0',
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV,
-  });
-});
-
-// API version info
+// Root API endpoint
 router.get('/', (req, res) => {
   res.json({
-    name: 'MentorHub API',
-    version: '1.0.0',
-    description: 'AI-powered mentorship platform API',
-    documentation: `${req.protocol}://${req.get('host')}/api-docs`,
+    success: true,
+    message: 'MentorHub API v1',
+    endpoints: {
+      auth: '/api/auth',
+      users: '/api/users',
+      mentors: '/api/mentors',
+      bookings: '/api/bookings',
+      reviews: '/api/reviews',
+      ai: '/api/ai',
+      uploads: '/api/uploads',
+      notifications: '/api/notifications',
+      analytics: '/api/analytics'
+    }
   });
 });
 
-// Public routes (no authentication required)
+// Mount all routes
 router.use('/auth', authRoutes);
-router.use('/mentors', mentorRoutes);
-router.use('/analytics', analyticsRoutes);
-
-// Protected routes (authentication required)
 router.use('/users', userRoutes);
+router.use('/mentors', mentorRoutes);
 router.use('/bookings', bookingRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/ai', aiRoutes);
 router.use('/uploads', uploadRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/analytics', analyticsRoutes);
 
 export default router;
