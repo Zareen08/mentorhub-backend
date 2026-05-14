@@ -85,22 +85,25 @@ model Booking {
 }
 
 model Review {
-  id        String   @id @default(cuid())
-  bookingId String   @unique
-  userId    String
-  mentorId  String
-  rating    Int
-  comment   String
-  createdAt DateTime @default(now())
-
-  booking   Booking  @relation(fields: [bookingId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
-  mentor    Mentor   @relation(fields: [mentorId], references: [id])
-
+  id          String    @id @default(cuid())
+  bookingId   String    @unique
+  userId      String
+  mentorId    String
+  rating      Int       
+  comment     String
+  sentiment   Json?     // Add this field for AI sentiment analysis
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  booking     Booking   @relation(fields: [bookingId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+  mentor      Mentor    @relation(fields: [mentorId], references: [id])
+  
   @@index([mentorId])
+  @@index([userId])
   @@index([rating])
+  @@index([createdAt])
 }
-
 model Notification {
   id        String           @id @default(cuid())
   userId    String
