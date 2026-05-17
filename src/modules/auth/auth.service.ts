@@ -8,7 +8,7 @@ import { RegisterInput, LoginInput } from './auth.interface';
 
 export class AuthService {
   async register(data: RegisterInput) {
-    const { email, password, name } = data;
+    const { email, password, name, role: roleInput } = data;
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
@@ -19,6 +19,14 @@ export class AuthService {
       throw new ApiError(400, 'User already exists with this email');
     }
 
+    // Map frontend role values to Prisma Role enum
+    const roleMap: Record<string, 'USER' | 'MENTOR'> = {
+      learner: 'USER',
+      mentor: 'MENTOR',
+      user: 'USER',
+    };
+    const role = roleMap[roleInput?.toLowerCase() ?? ''] ?? 'USER';
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -28,6 +36,7 @@ export class AuthService {
         email,
         password: hashedPassword,
         name,
+        role,
         avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3B82F6&color=fff`,
       },
       select: {

@@ -33,7 +33,17 @@ app.use(helmet({
 }));
 app.use(compression());
 app.use(cors({
-  origin: env.ALLOWED_ORIGINS?.split(',') || '*',
+  origin: (origin, callback) => {
+    const allowed = (env.ALLOWED_ORIGINS || 'http://localhost:3000')
+      .split(',')
+      .map((o) => o.trim());
+    // Allow requests with no origin (e.g. mobile apps, curl, same-origin SSR)
+    if (!origin || allowed.includes('*') || allowed.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS: origin ${origin} not allowed`));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -85,4 +95,4 @@ initializeSocket(httpServer);
 
 // Export both app and server
 export { app };
-export const server = httpServer;
+export const server = httpServer;j
