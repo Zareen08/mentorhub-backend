@@ -6,67 +6,76 @@ let genAI: GoogleGenerativeAI | null = null;
 let model: GenerativeModel | null = null;
 
 export const initializeGemini = () => {
-  if (!env.GEMINI_API_KEY) {
-    logger.warn('Gemini API key not configured');
+  const apiKey = process.env.GEMINI_API_KEY || env.GEMINI_API_KEY;
+  
+  if (!apiKey) {
+    logger.error('❌ GEMINI_API_KEY is not set in environment variables');
+    logger.info('Get your free API key at: https://aistudio.google.com');
     return null;
   }
 
-  genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
-  model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }); // Free tier model
-
-  logger.info('✅ Google Gemini AI initialized (Free)');
-  return model;
+  try {
+    genAI = new GoogleGenerativeAI(apiKey);
+    // Use gemini-1.5-flash (faster and free)
+    model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    
+    logger.info('✅ Google Gemini AI initialized successfully');
+    return model;
+  } catch (error) {
+    logger.error('❌ Failed to initialize Gemini:', error);
+    return null;
+  }
 };
 
 export const getGeminiModel = () => {
   if (!model) {
-    throw new Error('Gemini model not initialized');
+    throw new Error('Gemini model not initialized. Please check your GEMINI_API_KEY');
   }
   return model;
 };
 
-export const generateAIResponse = async (prompt: string): Promise<string> => {
-  const geminiModel = getGeminiModel();
-  
-  const result = await geminiModel.generateContent(prompt);
-  const response = await result.response;
-  return response.text();
-};
-
-export const generateStructuredResponse = async (prompt: string): Promise<any> => {
-  const geminiModel = getGeminiModel();
-  
-  const result = await geminiModel.generateContent(`${prompt}\n\nIMPORTANT: Return ONLY valid JSON, no markdown formatting, no backticks.`);
-  const response = await result.response;
-  const text = response.text();
-  
-  // Clean up the response - remove markdown code blocks if present
-  let cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-  
+export const generateGeminiResponse = async (prompt: string): Promise<string> => {
   try {
-    return JSON.parse(cleanText);
-  } catch (error) {
-    // Try to extract JSON from text
-    const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
+    const geminiModel = getGeminiModel();
+    const result = await geminiModel.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error: any) {
+    logger.error('Gemini API error:', error);
+    if (error.message?.includes('API key')) {
+      throw new Error('Invalid Gemini API key. Please check your configuration.');
     }
-    return {};
+    throw new Error('Failed to generate AI response: ' + error.message);
   }
 };
 
-export const generateChatResponse = async (
-  message: string, 
-  systemPrompt?: string
-): Promise<string> => {
-  const geminiModel = getGeminiModel();
-  
-  let fullPrompt = message;
-  if (systemPrompt) {
-    fullPrompt = `${systemPrompt}\n\nUser: ${message}\n\nAssistant:`;
+export const generateGeminiStructuredResponse = async (prompt: string): Promise<any> => {
+  try {
+    const geminiModel = getGeminiModel();
+    
+    const enhancedPrompt = `${prompt}\n\nIMPORTANT: Return ONLY valid JSON. No markdown formatting, no backticks, no extra text.`;
+    
+    const result = await geminiModel.generateContent(enhancedPrompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    // Clean the response
+    let cleanText = text.replace(/```json\n?/gi, '').replace(/```\n?/g, '').trim();
+    
+    // Try to extract JSON if there's extra text
+    const jsonMatch = cleanText.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+    if (jsonMatch) {
+      cleanText = jsonMatch[0];
+    }
+    
+    try {
+      return JSON.parse(cleanText);
+    } catch (parseError) {
+      logger.error('Failed to parse Gemini response as JSON:', cleanText.substring(0, 200));
+      return {};
+    }
+  } catch (error: any) {
+    logger.error('Gemini API error:', error);
+    throw new Error('Failed to generate structured response: ' + error.message);
   }
-  
-  const result = await geminiModel.generateContent(fullPrompt);
-  const response = await result.response;
-  return response.text();
 };
